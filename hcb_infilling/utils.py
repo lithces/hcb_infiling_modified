@@ -5,11 +5,6 @@ import torch
 import numpy as np
 
 def get_masked_positions(inputs, mask_id):
-  print('##########')
-  print(inputs)
-  print('##########')
-  print(mask_id)
-  print('##########')
   masked_positions = [(inputs[i] == mask_id).nonzero().squeeze() for i in range(len(inputs))]
   num_masked_per_input = [len(x) for x in masked_positions]
   # Currently require that all inputs have the same number of masked positions.

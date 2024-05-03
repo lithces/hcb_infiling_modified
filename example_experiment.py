@@ -1,3 +1,18 @@
+# import ssl
+
+# try:
+#     _create_unverified_https_context = ssl._create_unverified_context
+# except AttributeError:
+#     # Legacy Python that doesn't verify HTTPS certificates by default
+#     pass
+# else:
+#     # Handle target environment that doesn't support HTTPS verification
+#     ssl._create_default_https_context = _create_unverified_https_context
+
+import os
+os.environ['CURL_CA_BUNDLE'] = ''
+
+
 from collections import defaultdict
 
 import torch
@@ -12,6 +27,37 @@ from transformers import (
     DistilBertTokenizer,
     DistilBertForMaskedLM,
 )
+import hcb_infilling.share as share
+
+
+nltk.download('brown')
+print("Downloaded corpus.")
+
+from nltk.corpus import brown
+
+model_name = 'bert-base-uncased'
+method = 'topk'
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+share.device = device
+
+#tokenizer = BertTokenizer.from_pretrained(model_name)
+#model = BertForMaskedLM.from_pretrained(model_name).to(device)
+if "roberta" in model_name:
+    tokenizer = RobertaTokenizer.from_pretrained(model_name)
+    model = RobertaForMaskedLM.from_pretrained(model_name).to(device)
+elif "distilbert" in model_name:
+    tokenizer = DistilBertTokenizer.from_pretrained(model_name)
+    model = DistilBertForMaskedLM.from_pretrained(model_name).to(device)
+else:
+    tokenizer = BertTokenizer.from_pretrained(model_name)
+    model = BertForMaskedLM.from_pretrained(model_name).to(device)
+
+
+share.model = model
+share.tokenizer = tokenizer
+
+import hcb_infilling.decode, hcb_infilling.metrics, hcb_infilling.utils
 
 from hcb_infilling.decode import (
    decode_modified_BestToWorst_vectorized,
@@ -29,26 +75,6 @@ from hcb_infilling.utils import(
   sep_sents,
 )
 
-nltk.download('brown')
-print("Downloaded corpus.")
-
-from nltk.corpus import brown
-
-model_name = 'bert-base-uncased'
-method = 'topk'
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-#tokenizer = BertTokenizer.from_pretrained(model_name)
-#model = BertForMaskedLM.from_pretrained(model_name).to(device)
-if "roberta" in model_name:
-    tokenizer = RobertaTokenizer.from_pretrained(model_name)
-    model = RobertaForMaskedLM.from_pretrained(model_name).to(device)
-elif "distilbert" in model_name:
-    tokenizer = DistilBertTokenizer.from_pretrained(model_name)
-    model = DistilBertForMaskedLM.from_pretrained(model_name).to(device)
-else:
-    tokenizer = BertTokenizer.from_pretrained(model_name)
-    model = BertForMaskedLM.from_pretrained(model_name).to(device)
 
 np.random.seed(42)
 

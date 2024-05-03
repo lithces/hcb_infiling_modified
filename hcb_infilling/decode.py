@@ -3,7 +3,7 @@ from functools import partial
 import torch
 
 from .core import decode_base
-# from .probs_update import ccr_update, pseudo_ll_update
+from .probs_update import hcb_update as ccr_update, pseudo_ll_update
 from .probs_update import pseudo_ll_update
 
 from .token_samplers import beam_search, token_sampling
@@ -77,20 +77,12 @@ def decode_modified_LeftToRight_vectorized(
   N = input_ids.shape[0]
   pivots = torch.full((N, input_ids.shape[1]), mask_id)
 
-  # return decode_beam_search(
-  #   input_ids,
-  #   attention_mask,
-  #   beam_size,
-  #   pivots=pivots,
-  #   probs_update_fxn=ccr_update,
-  #   best_to_worst=False
-  # )
   return decode_beam_search(
     input_ids,
     attention_mask,
     beam_size,
     pivots=pivots,
-    probs_update_fxn=None,
+    probs_update_fxn=ccr_update,
     best_to_worst=False
   )
 
@@ -103,43 +95,26 @@ def decode_modified_BestToWorst_vectorized(
   N = input_ids.shape[0]
   pivots = torch.full((N, input_ids.shape[1]), mask_id)
 
-  # return decode_beam_search(
-  #   input_ids,
-  #   attention_mask,
-  #   beam_size,
-  #   pivots=pivots,
-  #   probs_update_fxn=ccr_update,
-  #   best_to_worst=True
-  # )
   return decode_beam_search(
     input_ids,
     attention_mask,
     beam_size,
     pivots=pivots,
-    probs_update_fxn=None,
+    probs_update_fxn=ccr_update,
     best_to_worst=True
   )
 
-# decode_pivot_LeftToRight_vectorized = partial(
-#   decode_beam_search,
-#   probs_update_fxn=ccr_update,
-#   best_to_worst=False,
-# )
 
 decode_pivot_LeftToRight_vectorized = partial(
   decode_beam_search,
-  probs_update_fxn=None,
+  probs_update_fxn=ccr_update,
   best_to_worst=False,
 )
 
 
-# decode_pivot_BestToWorst_vectorized = partial(
-#   decode_beam_search,
-#   probs_update_fxn=ccr_update,
-#   best_to_worst=True,
-# )
+
 decode_pivot_BestToWorst_vectorized = partial(
   decode_beam_search,
-  probs_update_fxn=None,
+  probs_update_fxn=ccr_update,
   best_to_worst=True,
 )

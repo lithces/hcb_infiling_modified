@@ -10,8 +10,8 @@ from .utils import get_masked_positions, get_best_masked_positions
 #     probs_to_token_fxn,
 #     pivots = None,
 #     best_to_worst = False,
-#     model = model,
-#     mask_id = tokenizer.mask_token_id
+#     model = model0,
+#     mask_id = tokenizer0.mask_token_id
 # ):
 def decode_base(
     input_ids,
@@ -24,6 +24,14 @@ def decode_base(
     model = None,
     mask_id = None
 ):
+  if model is None:
+    from . import share
+    model = share.model
+    print(model)
+  if mask_id is None:
+    from . import share
+    mask_id = share.tokenizer.mask_token_id
+    print(mask_id)
 
   masked_positions = get_masked_positions(input_ids, mask_id=mask_id)
   remaining_masked_positions = masked_positions.clone()
@@ -31,7 +39,8 @@ def decode_base(
   num_inputs = len(input_ids)
 
   log_softmax = torch.nn.LogSoftmax(dim=-1)
-  global device
+  from . import share
+  device = share.device
   # Get initial pool of candidates by considering first masked position separately.
   initial_logits = model(input_ids=input_ids.to(device), attention_mask=attention_mask).logits
   log_probs = log_softmax(initial_logits)
